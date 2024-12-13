@@ -1,18 +1,15 @@
 $type = "document" # "document" or "table"
-$examples = (Get-ChildItem ./examples -Directory).name
-$modules = (Get-ChildItem ./modules -Directory).name
-# terraform-docs markdown $type ./
-terraform-docs markdown $type ./ -c ./_docs/.terraform-module-docs.yml
-foreach ($example in $examples) {
-    if (gci ./examples/$example -Filter "header.md" -file) {
-        write-host "Found header.md in $example"
-        terraform-docs markdown $type ./examples/$example/ -c ./_docs/.terraform-example-docs.yml
-    }
+# Filter out the folders containing header.md files
+$headers = gci -recurse -filter "*header.md"
+# Loop through the folders and create the docs
 
-}
-foreach ($module in $modules) {
-    if (gci ./modules/$module -Filter "header.md" -file) {
-        write-host "Found header.md in $module"
-        terraform-docs markdown $type ./modules/$module/ -c ./_docs/.terraform-module-docs.yml
+
+$headers.directoryname | foreach {
+    if ($_ -match "examples") {
+        write-host "Creating example docs for: $($_)"
+        terraform-docs markdown $type "$($_)" -c _docs\.terraform-example-docs.yml
+    } else {
+        write-host "Creating docs for: $($_)"
+        terraform-docs markdown $type "$($_)" -c _docs\.terraform-module-docs.yml
     }
 }
